@@ -1,0 +1,1 @@
+﻿SELECT * FROM Owner WHERE NeighborhoodId is null
