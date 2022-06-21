@@ -19,7 +19,7 @@ namespace DogGo.Controllers
         public ActionResult Index()
         {
             List<Dog> dogs = _dogRepo.GetAllDogs();
-            return View();
+            return View(dogs);
         }
 
         // GET: DogController/Details/5
