@@ -2,38 +2,77 @@
 using Microsoft.AspNetCore.Mvc;
 using DogGo.Repositories;
 using System.Collections.Generic;
+using DogGo.Models.ViewModels;
 using DogGo.Models;
+using System.Security.Claims;
 
 namespace DogGo.Controllers
 {
     public class WalkersController : Controller
     {
         private readonly IWalkerRepository _walkerRepo;
+        private readonly IWalkRepository _walkRepo;
+        private readonly IOwnerRepository _ownerRepo;
 
         // ASP.NET will give us an instance of our Walker Repository. This is called "Dependency Injection"
-        public WalkersController(IWalkerRepository walkerRepository)
+        public WalkersController(
+            IWalkerRepository walkerRepository,
+        IWalkRepository walkRepository, IOwnerRepository ownerRepository)
         {
             _walkerRepo = walkerRepository;
+            _walkRepo = walkRepository;
+            _ownerRepo = ownerRepository;
         }
         // GET: WalkersController
         // GET: Walkers
         // GET: Walkers/Details/5
+
+        private int GetCurrentUserId()
+        {
+            string id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (id == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return int.Parse(id);
+            }
+        }
         public ActionResult Details(int id)
         {
             Walker walker = _walkerRepo.GetWalkerById(id);
+            List<Walk> walks = _walkRepo.GetWalksByWalkerId(id);
+
+            WalkerViewModel vm = new WalkerViewModel()
+            {
+                Walks = walks,
+                Walker = walker
+            };
 
             if (walker == null)
             {
                 return NotFound();
             }
 
-            return View(walker);
+            return View(vm);
         }
         public ActionResult Index()
         {
-            List<Walker> walkers = _walkerRepo.GetAllWalkers();
+            int userId = GetCurrentUserId();
 
-            return View(walkers);
+            if (userId == 0)
+            {
+                List<Walker> walkers = _walkerRepo.GetAllWalkers();
+                return View(walkers);
+            }
+            else
+            {
+                Owner owner = _ownerRepo.GetOwnerById(GetCurrentUserId());
+                List<Walker> walkers = _walkerRepo.GetWalkersInNeighborhood(owner.NeighborhoodId);
+
+                return View(walkers);
+            }
         }
 
         // GET: WalkersController/Details/5

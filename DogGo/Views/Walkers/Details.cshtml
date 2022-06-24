@@ -1,42 +1,70 @@
-﻿@model DogGo.Models.Walker
+﻿@model DogGo.Models.ViewModels.WalkerViewModel;
 
 @{
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<h1>Walker Profile</h1>
 
 <div>
     <h4>Walker</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
+            <img class="bg-info" src="@Model.Walker.ImageUrl" alt="avatar" />
+        </dt>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Walker.Name)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
+            @Html.DisplayFor(model => model.Walker.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Walker.Neighborhood)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NeighborhoodId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NeighborhoodId)
-        </dd>
-        <dt class = "col-sm-2">
-            <img class="bg-info" src="@Model.ImageUrl" alt="avatar" />
-        </dt>
-        <dd class = "col-sm-10">
-            <img class="bg-info" src="@Model.ImageUrl" alt="avatar" />
+            @Html.DisplayFor(model => model.Walker.Neighborhood.Name)
         </dd>
     </dl>
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new {  id = Model.Id  }) |
+    <h2>Recent Walks</h2>
+    <dl class="column">
+            <dt class="form-row">
+				Date
+			</dt>
+        @foreach (var w in @Model.Walks)
+        {
+			<dd class="col-sm-3">
+				@w.Date.ToShortDateString()
+			</dd>
+
+        }
+			<dt class="form-row">
+				Client
+			</dt>
+        @foreach (var w in @Model.Walks)
+        {
+            
+            <dd class="col-sm-3">
+				    @w.Owner.Name
+			    </dd>
+        }
+
+			<dt class="form-row">
+				Duration
+			</dt>
+        @foreach (var w in @Model.Walks)
+        {
+        <dd class="col-sm-3">
+				@(w.Duration / 60) min
+			</dd>
+            
+        }
+    </dl>
+</div>
+
+<div>
+    @Html.ActionLink("Edit", "Edit", new {  id = Model.Walker.Id  }) |
     <a asp-action="Index">Back to List</a>
 </div>

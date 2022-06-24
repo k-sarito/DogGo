@@ -57,6 +57,55 @@ namespace DogGo.Repositories
                 }
             }
         }
+        public List<Dog> GetDogsByOwnerId(int ownerId)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                SELECT Id, Name, Breed, Notes, ImageUrl, OwnerId 
+                FROM Dog
+                WHERE OwnerId = @ownerId
+            ";
+
+                    cmd.Parameters.AddWithValue("@ownerId", ownerId);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+
+                        List<Dog> dogs = new List<Dog>();
+
+                        while (reader.Read())
+                        {
+                            Dog dog = new Dog()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                Name = reader.GetString(reader.GetOrdinal("Name")),
+                                Breed = reader.GetString(reader.GetOrdinal("Breed")),
+                                OwnerId = reader.GetInt32(reader.GetOrdinal("OwnerId"))
+                            };
+
+                            // Check if optional columns are null
+                            if (reader.IsDBNull(reader.GetOrdinal("Notes")) == false)
+                            {
+                                dog.Notes = reader.GetString(reader.GetOrdinal("Notes"));
+                            }
+                            if (reader.IsDBNull(reader.GetOrdinal("ImageUrl")) == false)
+                            {
+                                dog.ImageURL = reader.GetString(reader.GetOrdinal("ImageUrl"));
+                            }
+
+                            dogs.Add(dog);
+                        }
+
+                        return dogs;
+                    }
+                }
+            }
+        }
         public Dog GetDogById(int id)
         {
             using (SqlConnection conn = Connection)
@@ -101,21 +150,40 @@ namespace DogGo.Repositories
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        INSERT INTO Dog ([Name], Breed, Notes, OwnerId, ImageURL)
-                        OUTPUT INSERTED.ID
-                        VALUES (@name, @breed, @notes, @ownerId, @imageURL)";
+                INSERT INTO Dog ([Name], OwnerId, Breed, Notes, ImageUrl)
+                OUTPUT INSERTED.ID
+                VALUES (@name, @ownerId, @breed, @notes, @imageUrl);
+            ";
 
                     cmd.Parameters.AddWithValue("@name", dog.Name);
                     cmd.Parameters.AddWithValue("@breed", dog.Breed);
-                    cmd.Parameters.AddWithValue("@notes", dog.Notes == null ? DBNull.Value : dog.Notes);
                     cmd.Parameters.AddWithValue("@ownerId", dog.OwnerId);
-                    cmd.Parameters.AddWithValue("@imageURL", dog.ImageURL == null ? DBNull.Value : dog.Notes);
 
-                    int id = (int)cmd.ExecuteScalar();
+                    // nullable columns
+                    if (dog.Notes == null)
+                    {
+                        cmd.Parameters.AddWithValue("@notes", DBNull.Value);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@notes", dog.Notes);
+                    }
 
-                    dog.Id = id;
+                    if (dog.ImageURL == null)
+                    {
+                        cmd.Parameters.AddWithValue("@imageUrl", DBNull.Value);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@imageUrl", dog.ImageURL);
+                    }
+
+
+                    int newlyCreatedId = (int)cmd.ExecuteScalar();
+
+                    dog.Id = newlyCreatedId;
+
                 }
-
             }
         }
 
